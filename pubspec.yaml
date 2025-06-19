@@ -1,0 +1,37 @@
+name: p2p_call_sample
+description: P2P Calls Sample
+
+version: 1.8.0
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  connectycube_sdk: any
+#  connectycube_sdk:
+#    path: ../../flutter-sdk
+  shared_preferences: any
+  connectycube_flutter_call_kit: any
+#  connectycube_flutter_call_kit:
+#    path: ../../connectycube-flutter-call-kit/connectycube_flutter_call_kit
+  universal_io: any
+  web_browser_detect: any
+  flutter_background: ^1.3.0
+  flutter_speed_dial: any
+  permission_handler: any
+  device_info_plus: any
+  firebase_messaging: any
+  flutter_local_notifications: any
+  package_info_plus: any
+  firebase_core: ^3.14.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true
