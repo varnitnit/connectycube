@@ -1,3 +1,5 @@
+import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 
 import 'package:connectycube_sdk/connectycube_sdk.dart';
@@ -53,9 +55,7 @@ class SelectOpponentsScreen extends StatelessWidget {
               onPressed: () {
                 CallManager.instance.destroy();
                 CubeChatConnection.instance.destroy();
-                PushNotificationsManager.instance
-                    .unsubscribe()
-                    .whenComplete(() {
+                PushNotificationsManager.instance.unsubscribe().whenComplete(() {
                   SharedPrefs.deleteUserData().whenComplete(() {
                     deleteSession().whenComplete(() {
                       Navigator.pop(context); // cancel current Dialog
@@ -97,12 +97,11 @@ class BodyLayout extends StatefulWidget {
 
 class _BodyLayoutState extends State<BodyLayout> {
   late Set<int> _selectedUsers;
-
+  var sdkInt;
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding:
-            const EdgeInsets.only(top: 48, left: 48, right: 48, bottom: 12),
+        padding: const EdgeInsets.only(top: 48, left: 48, right: 48, bottom: 12),
         child: Column(
           children: [
             const Text(
@@ -112,6 +111,40 @@ class _BodyLayoutState extends State<BodyLayout> {
             Expanded(
               child: _getOpponentsList(context),
             ),
+            GestureDetector(
+              onTap: () {
+                ConnectycubeFlutterCallKit.getToken().then((token) {
+                  log(
+                    '[getToken] VoIP token: $token',
+                  );
+                  if (token != null) {
+                    PushNotificationsManager.instance.subscribe(token);
+                  }
+                });
+              },
+              child: Text(
+                'subscribe',
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            GestureDetector(
+              onTap: () async {
+                var androidInfo = await DeviceInfoPlugin().androidInfo;
+                sdkInt = androidInfo.version.sdkInt;
+                setState(() {});
+                initForegroundService();
+
+                _selectedUsers = {};
+
+                checkSystemAlertWindowPermission(context);
+
+                requestNotificationsPermission();
+              },
+              child: Text(
+                'permissions=androidInfo.version.sdkInt=${sdkInt}',
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -120,8 +153,7 @@ class _BodyLayoutState extends State<BodyLayout> {
                   child: FloatingActionButton(
                     heroTag: "VideoCall",
                     backgroundColor: Colors.blue,
-                    onPressed: () => CallManager.instance.startNewCall(
-                        context, CallType.VIDEO_CALL, _selectedUsers),
+                    onPressed: () => CallManager.instance.startNewCall(context, CallType.VIDEO_CALL, _selectedUsers),
                     child: const Icon(
                       Icons.videocam,
                       color: Colors.white,
@@ -133,8 +165,7 @@ class _BodyLayoutState extends State<BodyLayout> {
                   child: FloatingActionButton(
                     heroTag: "AudioCall",
                     backgroundColor: Colors.green,
-                    onPressed: () => CallManager.instance.startNewCall(
-                        context, CallType.AUDIO_CALL, _selectedUsers),
+                    onPressed: () => CallManager.instance.startNewCall(context, CallType.AUDIO_CALL, _selectedUsers),
                     child: const Icon(
                       Icons.call,
                       color: Colors.white,
@@ -149,8 +180,7 @@ class _BodyLayoutState extends State<BodyLayout> {
 
   Widget _getOpponentsList(BuildContext context) {
     CubeUser? currentUser = CubeChatConnection.instance.currentUser;
-    final users =
-        config.users.where((user) => user.id != currentUser!.id).toList();
+    final users = config.users.where((user) => user.id != currentUser!.id).toList();
 
     return ListView.builder(
       itemCount: users.length,

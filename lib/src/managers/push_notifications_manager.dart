@@ -35,7 +35,6 @@ class PushNotificationsManager {
   static PushNotificationsManager get instance => _getInstance();
 
   init() async {
-
     ConnectycubeFlutterCallKit.initEventsHandler();
 
     ConnectycubeFlutterCallKit.onTokenRefreshed = (token) {
@@ -60,13 +59,14 @@ class PushNotificationsManager {
     var savedToken = await SharedPrefs.getSubscriptionToken();
     if (token == savedToken) {
       log('[subscribe] skip subscription for same token', PushNotificationsManager.tag);
-      return;
+      // return;
     }
 
     CreateSubscriptionParameters parameters = CreateSubscriptionParameters();
     parameters.pushToken = token;
 
-    parameters.environment = kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
+    parameters.environment = CubeEnvironment.DEVELOPMENT;
+    //parameters.environment = kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
 
     if (Platform.isAndroid) {
       parameters.channel = NotificationsChannels.GCM;
@@ -127,6 +127,25 @@ class PushNotificationsManager {
   }
 }
 
+Future<void> sendPushAboutRejectFromKilledState(
+  Map<String, dynamic> parameters,
+  int callerId,
+) {
+  CreateEventParams params = CreateEventParams();
+  params.parameters = parameters;
+  params.parameters['message'] = "Reject call";
+  params.parameters[paramSignalType] = signalTypeRejectCall;
+  // params.parameters[PARAM_IOS_VOIP] = 1;
+
+  params.notificationType = NotificationType.PUSH;
+  params.environment = CubeEnvironment.DEVELOPMENT;
+
+  //params.environment = !kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
+  params.usersIds = [callerId];
+
+  return createEvent(params.getEventForRequest());
+}
+
 @pragma('vm:entry-point')
 Future<void> onCallRejectedWhenTerminated(CallEvent callEvent) async {
   log('[PushNotificationsManager][onCallRejectedWhenTerminated] callEvent: $callEvent');
@@ -147,23 +166,6 @@ Future<void> onCallRejectedWhenTerminated(CallEvent callEvent) async {
   return Future.wait([sendOfflineReject, sendPushAboutReject]).then((result) {
     return Future.value();
   });
-}
-
-Future<void> sendPushAboutRejectFromKilledState(
-  Map<String, dynamic> parameters,
-  int callerId,
-) {
-  CreateEventParams params = CreateEventParams();
-  params.parameters = parameters;
-  params.parameters['message'] = "Reject call";
-  params.parameters[paramSignalType] = signalTypeRejectCall;
-  // params.parameters[PARAM_IOS_VOIP] = 1;
-
-  params.notificationType = NotificationType.PUSH;
-  params.environment = kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
-  params.usersIds = [callerId];
-
-  return createEvent(params.getEventForRequest());
 }
 
 ///
@@ -196,6 +198,34 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,
   // make sure you call `initializeApp` before using other Firebase services.
   await Firebase.initializeApp();
+  initConnectycubeContextLess();
+  print(" vvv Handling a background message: ${message.data}");
+  ConnectycubeFlutterCallKit.onCallIncomingWhenTerminated = onCallIncomingWhenTerminated;
+/*
+  final data = message.data;
 
-  print("Handling a background message: ${message.messageId}");
+  // Safely parse message data
+  final String sessionId = data['session_id'] ?? '';
+  final int callType = int.tryParse(data['call_type'] ?? '') ?? 1;
+  final int callerId = int.tryParse(data['caller_id'] ?? '') ?? 0;
+  final String callerName = data['caller_name'] ?? 'Unknown';
+  final Set<int> opponentsIds = (data['call_opponents'] ?? '')
+      .split(',')
+      .map((id) => int.tryParse(id.trim()))
+      .where((id) => id != null)
+      .cast<int>()
+      .toSet(); // Convert to Set<int>
+
+
+  final callEvent = CallEvent(
+    sessionId: sessionId,
+    callType: callType,
+    callerId: callerId,
+    callerName: callerName,
+    opponentsIds: opponentsIds,
+    callPhoto: 'https://i.imgur.com/KwrDil8b.jpg', // Optional placeholder
+    userInfo: {'customParameter1': 'value1'},
+  );
+
+  ConnectycubeFlutterCallKit.showCallNotification(callEvent);*/
 }

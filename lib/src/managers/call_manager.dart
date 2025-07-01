@@ -75,6 +75,7 @@ class CallManager {
       _currentCall = callSession;
 
       var callState = await _getCallState(_currentCall!.sessionId);
+      log('callSession==$callSession==$callState');
 
       if (callState == CallState.REJECTED) {
         reject(_currentCall!.sessionId, false);
@@ -225,7 +226,9 @@ class CallManager {
     };
     log('params===${params}');
     params.notificationType = NotificationType.PUSH;
-    params.environment = kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
+    params.environment = CubeEnvironment.DEVELOPMENT;
+
+    // params.environment = !kReleaseMode ? CubeEnvironment.PRODUCTION : CubeEnvironment.DEVELOPMENT;
     params.usersIds = currentCall.opponentsIds.toList();
 
     return params;

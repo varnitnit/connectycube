@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:connectycube_sdk/connectycube_sdk.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:p2p_call_sample/src/managers/push_notifications_manager.dart';
+import 'package:p2p_call_sample/src/utils/consts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'firebase_options.dart';
+import 'notification_new.dart';
 import 'notification_services.dart';
 import 'src/config.dart' as config;
 import 'src/login_screen.dart';
@@ -31,8 +33,10 @@ Future<void> main() async {
   );
   // Request permissions
   FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+  AppNotificationHandler().configureNotifications();
 
   // request permissions for showing notification in iOS
+
   firebaseMessaging.requestPermission(alert: true, badge: true, sound: true);
 
   // add listener for foreground push notifications
@@ -68,7 +72,7 @@ Future<void> main() async {
     sound: true,
   );
   NotificationService.showMsgHandler();
-  NotificationService.getFCMToken();
+ // NotificationService.getFCMToken();
   await [
     Permission.microphone,
     Permission.notification,
